@@ -6,6 +6,7 @@ const md = require('node-md-config');
 const WorldStateCache = require('./WorldStateCache.js');
 const Database = require('./settings/Database.js');
 const Tracker = require('./Tracker.js');
+const Notifier = require('./Notifier.js');
 
 /**
  * A collection of strings that are used by the parser to produce markdown-formatted text
@@ -142,11 +143,13 @@ class Genesis {
      */
     this.platforms = ['pc', 'ps4', 'xb1'];
 
-    const worldStateTimeout = 60000 || process.env.WORLDSTATE_TIMEOUT;
+    const worldStateTimeout = process.env.WORLDSTATE_TIMEOUT || 60000;
 
     this.platforms.forEach((platform) => {
       this.worldStates[platform] = new WorldStateCache(platform, worldStateTimeout);
     });
+
+    this.notifier = new Notifier(this);
 
     this.tracker = new Tracker(this.logger, this.client, { shardId, shardCount });
 
@@ -167,7 +170,7 @@ class Genesis {
     // kill on disconnect so a new instance can be spawned
     this.client.on('disconnect', (event) => {
       this.logger.debug(`Disconnected with close event: ${event.code}`);
-      process.exit(4);
+      //process.exit(4);
     });
 
     this.client.on('error', error => this.logger.error(error));
@@ -183,6 +186,7 @@ class Genesis {
       return this.client.login(this.token);
     }).then((t) => {
       this.logger.debug(`Logged in with token ${t}`);
+      this.notifier.start();
     }).catch((e) => {
       this.logger.error(e.message);
       this.logger.fatal(e);

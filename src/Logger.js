@@ -46,4 +46,8 @@ levels.forEach((level) => {
   };
 });
 
+Logger.prototype.error = (e) => {
+  console.error(e);
+};
+
 module.exports = Logger;
