@@ -113,12 +113,6 @@ class Genesis {
     this.owner = owner;
 
     /**
-     * The status message to use for the bot
-     * @type {string}
-     */
-    this.statusMessage = `${prefix}help for help (${this.shardId + 1}/${this.shardCount})`;
-
-    /**
      * Persistent storage for settings
      * @type {Database}
      */
@@ -147,6 +141,12 @@ class Genesis {
     this.platforms.forEach((platform) => {
       this.worldStates[platform] = new WorldStateCache(platform, worldStateTimeout);
     });
+
+    /**
+     * The languages that are useable for the bot
+     * @type {Array.<string>}
+     */
+    this.languages = ['en-us'];
 
     this.tracker = new Tracker(this.logger, this.client, { shardId, shardCount });
 
@@ -178,7 +178,7 @@ class Genesis {
    * Creates the database schema and logs in the bot to Discord
    */
   start() {
-    this.settings.createSchema().then(() => {
+    this.settings.createSchema(this.client).then(() => {
       this.logger.debug('Schema created');
       return this.client.login(this.token);
     }).then((t) => {
@@ -196,7 +196,7 @@ class Genesis {
   onReady() {
     this.logger.debug(`${this.client.user.username} ready!`);
     this.logger.debug(`Bot: ${this.client.user.username}#${this.client.user.discriminator}`);
-    this.client.user.setGame(this.statusMessage);
+    this.client.user.setGame(`@${this.client.user.username} help (${this.shardId + 1}/${this.shardCount})`);
     this.readyToExecute = true;
   }
 

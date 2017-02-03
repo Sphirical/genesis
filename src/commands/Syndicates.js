@@ -14,7 +14,7 @@ class Syndicates extends Command {
    */
   constructor(bot) {
     super(bot, 'ondemand.syndicate', 'syndicate', 'Gets the starchat nodes for the desired syndicate, or all.');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}syndicate(?:\\s+([\\w+\\s]+))?`, 'i');
+    this.regex = new RegExp('^syndicate(?:\\s+([\\w+\\s]+))?', 'i');
     this.usages = [
       {
         description: 'Display syndicate nodes for a syndicate.',
@@ -29,7 +29,7 @@ class Syndicates extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const syndicate = message.content.match(this.regex)[1];
+    const syndicate = message.strippedContent.match(this.regex)[1];
     this.bot.settings.getChannelPlatform(message.channel)
       .then(platform => this.bot.worldStates[platform].getData())
       .then((ws) => {

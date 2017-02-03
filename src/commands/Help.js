@@ -2,6 +2,7 @@
 
 const Command = require('../Command.js');
 
+
 /**
  * Describes the Help command
  */
@@ -39,7 +40,6 @@ class Help extends Command {
           }
         }).catch(this.logger.error);
     }
-
     const promises = [
       message.author.sendEmbed(this.helpEmbed).then(() => {
         if (message.deletable) {

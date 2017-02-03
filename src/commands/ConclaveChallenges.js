@@ -13,7 +13,7 @@ class ConclaveChallenges extends Command {
    */
   constructor(bot) {
     super(bot, 'ondemand.conclaveChallenges', 'conclave', 'Gets the current conclave challenges for a category of challenge, or all.');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}conclave(?:\\s+([\\w+\\s]+))?`, 'i');
+    this.regex = new RegExp('^conclave(?:\\s+([\\w+\\s]+))?', 'i');
 
     this.usages = [
       {
@@ -29,7 +29,7 @@ class ConclaveChallenges extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const category = message.content.match(this.regex)[1];
+    const category = message.strippedContent.match(this.regex)[1];
     this.bot.settings.getChannelPlatform(message.channel)
       .then(platform => this.bot.worldStates[platform].getData())
       .then((ws) => {

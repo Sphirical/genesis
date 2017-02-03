@@ -13,7 +13,7 @@ class PriceCheck extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.pricecheck', 'pricecheck', 'pricecheck');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}p(?:rice)?\\s?c(?:heck)?(?:\\s+([\\w+\\s]+))?`, 'i');
+    this.regex = new RegExp('^p(?:rice)?\\s?c(?:heck)?(?:\\s+([\\w+\\s]+))?', 'i');
 
     this.usages = [
       {
@@ -31,7 +31,7 @@ class PriceCheck extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const item = message.content.match(this.regex)[1];
+    const item = message.strippedContent.match(this.regex)[1];
 
     this.nexusQuerier.priceCheckQueryAttachment(item)
         .then((result) => {

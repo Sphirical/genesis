@@ -13,7 +13,7 @@ class PrimeAccess extends Command {
    */
   constructor(bot) {
     super(bot, 'ondemand.primeaccess', 'primeaccess', 'Display the currently active prime access news');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}prime\\s?access$`, 'i');
+    this.regex = new RegExp('^prime\\s?access$', 'i');
   }
 
   /**

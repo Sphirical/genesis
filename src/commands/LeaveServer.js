@@ -13,7 +13,7 @@ class LeaveServer extends Command {
   constructor(bot) {
     super(bot, 'core.leaveserver', 'leaveserver', 'Leave a specified server');
     this.ownerOnly = true;
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}${this.call}\\s*(.*)?`, 'i');
+    this.regex = new RegExp(`^${this.call}\\s*(.*)?`, 'i');
     this.usages = [
       {
         description: 'Tell the bot to leave a server, if it\'s cached',
@@ -28,7 +28,7 @@ class LeaveServer extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const serverid = message.cleanContent.match(this.regex)[1];
+    const serverid = message.strippedContent.match(this.regex)[1];
     if (this.bot.client.guilds.has(serverid)) {
       this.bot.client.guilds.get(serverid).leave()
         .then(guild => message.reply(`Left ${guild.name}`))

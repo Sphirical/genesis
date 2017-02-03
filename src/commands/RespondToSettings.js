@@ -2,32 +2,35 @@
 
 const Command = require('../Command.js');
 
-class Platform extends Command {
+class RespondToSettings extends Command {
   constructor(bot) {
-    super(bot, 'settings.platform', 'platform');
+    super(bot, 'settings.respondSettings', 'Set whether or not to respond to settings');
     this.usages = [
-      { description: 'Change this channel\'s platform', parameters: ['platform'] },
+      { description: 'Change if this channel has settings changes resonded in it', parameters: ['response enabled'] },
     ];
-    this.regex = new RegExp(`^${this.call}(?:\\s+([pcsxb14]{2,3}))?`,
-      'i');
+    this.regex = new RegExp('^respond\\s?settings\\s?(.+)?$', 'i');
   }
 
   run(message) {
-    const platform = message.strippedContent.match(this.regex)[1];
-    if (!platform || !this.bot.platforms.includes(platform.toLowerCase())) {
+    const enable = message.cleanContent.match(this.regex)[1];
+    if (!enable) {
       message.channel.sendEmbed({
         title: 'Usage',
         type: 'rich',
         color: 0x0000ff,
         fields: [
           {
-            name: `${this.bot.prefix}${this.call} <platform>`,
-            value: `Platform is one of ${this.bot.platforms.join(', ')}`,
+            name: `${this.bot.prefix}${this.call} <yes|no>`,
+            value: '_ _',
           },
         ],
       });
     } else {
-      this.bot.settings.setChannelPlatform(message.channel, platform.toLowerCase()).then(() => {
+      let enableResponse = 0;
+      if (enable === 'enable' || enable === 'enable' || enable === '1' || enable === 'true') {
+        enableResponse = 1;
+      }
+      this.bot.settings.setChannelResponseToSettings(message.channel, enableResponse).then(() => {
         message.react('\u2705');
         this.bot.settings.getChannelResponseToSettings(message.channel)
           .then((respondToSettings) => {
@@ -45,4 +48,4 @@ class Platform extends Command {
   }
 }
 
-module.exports = Platform;
+module.exports = RespondToSettings;

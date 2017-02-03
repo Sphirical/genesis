@@ -2,32 +2,31 @@
 
 const Command = require('../Command.js');
 
-class Platform extends Command {
+class Language extends Command {
   constructor(bot) {
-    super(bot, 'settings.platform', 'platform');
+    super(bot, 'settings.language', 'language');
     this.usages = [
-      { description: 'Change this channel\'s platform', parameters: ['platform'] },
+      { description: 'Change this channel\'s language', parameters: ['language'] },
     ];
-    this.regex = new RegExp(`^${this.call}(?:\\s+([pcsxb14]{2,3}))?`,
-      'i');
+    this.regex = new RegExp(`^${this.call}\\s?(.+)?$`, 'i');
   }
 
   run(message) {
-    const platform = message.strippedContent.match(this.regex)[1];
-    if (!platform || !this.bot.platforms.includes(platform.toLowerCase())) {
+    const language = message.strippedContent.match(this.regex)[1];
+    if (!language || !this.bot.languages.includes(language.toLowerCase())) {
       message.channel.sendEmbed({
         title: 'Usage',
         type: 'rich',
         color: 0x0000ff,
         fields: [
           {
-            name: `${this.bot.prefix}${this.call} <platform>`,
-            value: `Platform is one of ${this.bot.platforms.join(', ')}`,
+            name: `${this.bot.prefix}${this.call} <language>`,
+            value: `Language is one of ${this.bot.languages.join(', ')}`,
           },
         ],
       });
     } else {
-      this.bot.settings.setChannelPlatform(message.channel, platform.toLowerCase()).then(() => {
+      this.bot.settings.setChannelLanguage(message.channel, language.toLowerCase()).then(() => {
         message.react('\u2705');
         this.bot.settings.getChannelResponseToSettings(message.channel)
           .then((respondToSettings) => {
@@ -45,4 +44,4 @@ class Platform extends Command {
   }
 }
 
-module.exports = Platform;
+module.exports = Language;

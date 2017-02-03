@@ -14,7 +14,7 @@ class Raid extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.raid', 'raid', 'Get the raid record for a desired user, or for the calling user');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}(?:${this.call}s?|trials?)\\s*(.+)?`, 'i');
+    this.regex = new RegExp(`^(?:${this.call}s?|trials?)\\s*(.+)?`, 'i');
     this.usages = [
       {
         description: 'Search for a users\'s raid stats',
@@ -29,7 +29,7 @@ class Raid extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    let query = message.cleanContent.match(this.regex)[1];
+    let query = message.strippedContent.match(this.regex)[1];
     if (!query || typeof query === 'undefined') {
       query = message.member ? message.member.displayName : message.author.username;
     }

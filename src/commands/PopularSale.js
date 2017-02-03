@@ -13,7 +13,7 @@ class PopularSale extends Command {
    */
   constructor(bot) {
     super(bot, 'ondemand.populardeals', 'populardeals', 'Displays current featured deals');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}popular\\sdeals?$`, 'i');
+    this.regex = new RegExp('^popular\\sdeals?$', 'i');
   }
 
   /**

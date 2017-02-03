@@ -15,7 +15,7 @@ class Whereis extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.whereis', 'whereis', 'whereis');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}where(?:\\s?is)?(?:\\s+([\\w+\\s]+))?`, 'i');
+    this.regex = new RegExp('^where(?:\\s?is)?(?:\\s+([\\w+\\s]+))?', 'i');
 
     this.usages = [
       {
@@ -33,7 +33,7 @@ class Whereis extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const item = message.content.match(this.regex)[1];
+    const item = message.strippedContent.match(this.regex)[1];
     this.querier.getAll(item)
       .then((results) => {
         const resultsHasResults = Object.prototype.toString.call(results) === '[object Array]' && results.length > 0;

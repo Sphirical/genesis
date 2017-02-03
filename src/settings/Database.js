@@ -36,10 +36,15 @@ class Database {
 
   /**
    * Creates the required tables in the database
+   * @param {Client} client for pulling guild information
    * @returns {Promise}
    */
-  createSchema() {
-    return Promise.mapSeries(schema, q => this.db.query(q));
+  createSchema(client) {
+    const promises = Promise.mapSeries(schema, q => this.db.query(q));
+    client.guilds.array().forEach((guild) => {
+      promises.push(this.addGuild(guild));
+    });
+    return promises;
   }
 
   /**
@@ -132,6 +137,50 @@ class Database {
   }
 
   /**
+   * Sets the custom prefix for this guild
+   * @param {Guild} guild The Discord guild for which to set the response setting
+   * @param {string} prefix The prefix for this guild
+   * @returns {Promise}
+   */
+  setGuildPrefix(guild, prefix) {
+    const query = SQL`UPDATE channels SET prefix = ${prefix} WHERE guild_id = ${guild.id};`;
+    return this.db.query(query);
+  }
+
+  /**
+   * Resets the custom prefix for this guild to the bot's globally configured prefix
+   * @param {Guild} guild The Discord guild for which to set the response setting
+   * @param {string} prefix The prefix for this guild
+   * @returns {Promise}
+   */
+  resetGuildPrefix(guild) {
+    const query = SQL`UPDATE channels SET prefix = '${this.bot.prefix}' WHERE guild_id = ${guild.id};`;
+    return this.db.query(query);
+  }
+
+  /**
+   * Sets the custom prefix for this channel
+   * @param {Channel} channel The Discord channel for which to set the response setting
+   * @param {string} prefix The prefix for this channel
+   * @returns {Promise}
+   */
+  setChannelPrefix(channel, prefix) {
+    const query = SQL`UPDATE channels SET prefix = ${prefix} WHERE id = ${channel.id};`;
+    return this.db.query(query);
+  }
+
+  /**
+   * Resets the custom prefix for this guild to the bot's globally configured prefix
+   * @param {Channel} channel The Discord guild for which to set the response setting
+   * @param {string} prefix The prefix for this channel
+   * @returns {Promise}
+   */
+  resetChannelPrefix(channel) {
+    const query = SQL`UPDATE channels SET prefix = '${this.bot.prefix}' WHERE id = ${channel.id};`;
+    return this.db.query(query);
+  }
+
+  /**
    * Returns the language for a channel
    * @param {Channel} channel The channel
    * @returns {Promise.<string>}
@@ -174,15 +223,26 @@ class Database {
    * @param {Channel} channel The channel
    * @returns {Promise.<boolean>}
    */
-  getChannelRespondToSettings(channel) {
-    const query = SQL`SELECT platform FROM channels WHERE id = ${channel.id};`;
+  getChannelResponseToSettings(channel) {
+    const query = SQL`SELECT respond_to_settings FROM channels WHERE id = ${channel.id};`;
     return this.db.query(query)
       .then((res) => {
-        if (res.rows.length === 0) {
-          throw new Error(`The channel with ID ${channel.id} was not found in the database`);
+        if (res[0].length === 0) {
+          this.setChannelResponseToSettings(channel, 0).then(() => 0);
         }
-        return res.rows[0].respond_to_settings;
+        return res[0][0].respond_to_settings === 1;
       });
+  }
+
+  /**
+   * Returns the prefix setting for a guild
+   * @param {Channel} channel The guild
+   * @returns {Promis.<string>} the previs setting for the guild
+   */
+  getChannelPrefix(channel) {
+    const query = SQL`SELECT prefix FROM channels WHERE id = ${channel.id};`;
+    return this.db.query(query)
+      .then(res => res[0][0].prefix);
   }
 
   /**
@@ -431,11 +491,10 @@ class Database {
     AND is_user = false AND target_id = ${role.id}`;
     return this.db.query(query)
       .then((res) => {
-        if (res.rows.length === 0) {
-          throw new Error(`The channel permissions for the channel ${channel.id}
-             for role ${role.id} was not found in the database`);
+        if (res[0].length === 0) {
+          return true;
         }
-        return res.rows[0].allowed;
+        return res.rows[0].allowed === 1;
       });
   }
 
@@ -470,12 +529,10 @@ class Database {
           AND guild_permissions.target_id IN (${userRoleIds});`;
     return this.db.query(query)
     .then((res) => {
-      if (res.rows.length === 0) {
-        throw new Error(`The channel permissions for the channel ${channel.id}
-           for roles: ${userRoles.array().map(role => role.name).join(', ')} were not found in the database`);
+      if (res[0].length === 0) {
+        return true;
       }
-
-      return res.rows[0].allowed;
+      return res[0][0].allowed;
     });
   }
 

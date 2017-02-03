@@ -44,7 +44,7 @@ class Armor extends Command {
   constructor(bot) {
     super(bot, 'misc.armor', 'armor', 'armor');
 
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}armor(?:\\s+([\\d+\\.?\\d*\\s]+))?`, 'i');
+    this.regex = new RegExp('^armor(?:\\s+([\\d+\\.?\\d*\\s]+))?', 'i');
 
     this.usages = [
       { description: 'Display instructions for calculating armor', parameters: [] },

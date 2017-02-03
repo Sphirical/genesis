@@ -13,7 +13,7 @@ class Avatar extends Command {
   constructor(bot) {
     super(bot, 'core.avatar', 'avatar', 'Set Bot avatar');
     this.ownerOnly = true;
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}avatar\\s*(.*)?`, 'i');
+    this.regex = new RegExp('^avatar\\s*(.*)?', 'i');
     this.usages = [
       {
         description: 'Set the bot\'s avatar url',
@@ -28,7 +28,7 @@ class Avatar extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const url = message.cleanContent.match(this.regex)[1];
+    const url = message.strippedContent.match(this.regex)[1];
     this.bot.client.user.setAvatar(url)
     .then(() => message.reply('New avatar set!'))
     .catch(this.logger.error);

@@ -7,7 +7,8 @@ module.exports = [
     language VARCHAR(5) NOT NULL DEFAULT 'en-US',
     platform VARCHAR(3) NOT NULL DEFAULT 'pc',
     webhook TEXT,
-    respond_to_settings BOOLEAN NOT NULL DEFAULT TRUE
+    respond_to_settings BOOLEAN NOT NULL DEFAULT TRUE,
+    prefix VARCHAR(3) NOT NULL DEFAULT '/'
   );`,
   `CREATE TABLE IF NOT EXISTS type_notifications (
     channel_id BIGINT UNSIGNED NOT NULL,

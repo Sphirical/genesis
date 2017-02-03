@@ -12,7 +12,7 @@ class FrameProfile extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.warframe.profile', 'frame profile', 'Get a Warframe\'s profile video');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}frame(?:\\s?profile)?(.+)?`, 'i');
+    this.regex = new RegExp('^frame(?:\\s?profile)?(.+)?', 'i');
     this.usages = [
       {
         description: 'Get a Warframe\'s profile video',
@@ -27,7 +27,7 @@ class FrameProfile extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    let frame = message.content.match(this.regex)[1];
+    let frame = message.strippedContent.match(this.regex)[1];
     let promise;
     if (frame) {
       frame = frame.trim().toLowerCase();

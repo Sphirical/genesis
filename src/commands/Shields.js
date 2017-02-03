@@ -22,7 +22,7 @@ class Shields extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.shields', 'shields', 'shields');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}shield(?: +([\\d+\\.?\\d* ]+))?`, 'i');
+    this.regex = new RegExp('^shield(?: +([\\d+\\.?\\d* ]+))?', 'i');
 
     this.usages = [
       {
@@ -39,7 +39,7 @@ class Shields extends Command {
    */
   run(message) {
     const pattern3Params = /(\d+\.?\d*)(?:\s+(\d+\.?\d*)\s+(\d+\.?\d*))?$/;
-    const params = message.content.match(pattern3Params);
+    const params = message.strippedContent.match(pattern3Params);
     const color = params && params.length > 3 ? 0x00ff00 : 0xff0000;
     const embed = {
       color,

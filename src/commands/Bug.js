@@ -12,7 +12,7 @@ class BugReport extends Command {
    */
   constructor(bot) {
     super(bot, 'core.bug', 'bug', 'Send a bug report to the bot owner');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}${this.call}\\s*(.*)?`, 'i');
+    this.regex = new RegExp(`^${this.call}\\s*(.*)?`, 'i');
     this.usages = [
       {
         description: 'Send a bug report to bot owner',
@@ -37,10 +37,10 @@ class BugReport extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const bugReport = message.cleanContent.match(this.regex)[1];
+    const bugReport = message.strippedContent.match(this.regex)[1];
 
     if (this.bot.owner) {
-      if(bugReport) {
+      if (bugReport) {
         const params = bugReport.split('|');
         const embed = {
           author: {
@@ -80,8 +80,8 @@ class BugReport extends Command {
             name: `${message.author.username}#${message.author.discriminator}`,
           },
           title: `Bug Report | ${message.author}`,
-          fields: [{name: '_ _', value:'Need to provide a bug report, see `/help` for syntax.'}],
-        }).catch(this.logger.error)
+          fields: [{ name: '_ _', value: 'Need to provide a bug report, see `/help` for syntax.' }],
+        }).catch(this.logger.error);
       }
     }
   }

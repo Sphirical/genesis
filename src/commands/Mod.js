@@ -15,7 +15,7 @@ class Mod extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.mod', 'mod', 'Search the Warframe Wiki for a mod\'s image');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}mod(.+)`, 'i');
+    this.regex = new RegExp('^mod(.+)', 'i');
   }
 
   /**
@@ -24,7 +24,7 @@ class Mod extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const query = this.regex.exec(message.cleanContent.match(this.regex)[0])[1];
+    const query = this.regex.exec(message.strippedContent.match(this.regex)[0])[1];
     if (!query) {
       message.reply(`${this.md.codeMulti}Please specify a search term${this.md.blockEnd}`);
     } else {

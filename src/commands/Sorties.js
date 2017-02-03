@@ -13,7 +13,6 @@ class Sorties extends Command {
    */
   constructor(bot) {
     super(bot, 'ondemand.sorties', 'sortie', 'Display the currently active sorties');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}${this.call}s?$`, 'i');
   }
 
   /**

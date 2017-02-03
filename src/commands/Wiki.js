@@ -15,7 +15,7 @@ class Wiki extends Command {
    */
   constructor(bot) {
     super(bot, 'misc.wiki', 'wiki', 'Search the Warframe Wiki for information');
-    this.regex = new RegExp(`^${this.bot.escapedPrefix}wiki\\s*([\\w\\s-]+)?`, 'i');
+    this.regex = new RegExp('^wiki\\s*([\\w\\s-]+)?', 'i');
     this.usages = [
       {
         description: 'Search the Warframe wiki for a specific topic',
@@ -30,7 +30,7 @@ class Wiki extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const query = message.cleanContent.match(this.regex)[1];
+    const query = message.strippedContent.match(this.regex)[1];
     if (!query) {
       message.reply(`${this.md.codeMulti}Please specify a search term${this.md.blockEnd}`);
     } else {
