@@ -99,6 +99,8 @@ class Genesis {
      */
     this.readyToExecute = false;
 
+    this.listenedChannels = [];
+
     /**
      * Command handler for this Bot
      * @type {CommandHandler}
@@ -172,6 +174,8 @@ class Genesis {
 
     this.client.on('error', error => this.logger.error(error));
     this.client.on('warn', warning => this.logger.warning(warning));
+
+    this.client.on('voiceStateUpdate', this.updateRoomListeners);
   }
 
   /**
@@ -197,6 +201,7 @@ class Genesis {
     this.logger.debug(`${this.client.user.username} ready!`);
     this.logger.debug(`Bot: ${this.client.user.username}#${this.client.user.discriminator}`);
     this.client.user.setGame(`@${this.client.user.username} help (${this.shardId + 1}/${this.shardCount})`);
+    this.settings.ensureData(this.client);
     this.readyToExecute = true;
   }
 
@@ -271,6 +276,52 @@ class Genesis {
     this.settings.deleteChannel(channel).then(() => {
       this.logger.debug(`Channel with id ${channel.id} deleted`);
     }).catch(this.logger.error);
+  }
+
+  updateRoomListeners(oldUser, newUser) {
+    if (oldUser.voiceChannel || newUser.voiceChannel) {
+      if (this.listenedChannels) {
+        if (this.listenedChannels.length > 0) {
+          this.listenedChannels.forEach((listenedChannel) => {
+            if (listenedChannel.channel.id === oldUser.voiceChannel.id) {
+              const currChannel = oldUser.guild.channels.get(listenedChannel.channel.id);
+              if (currChannel.members.length === 0) {
+                // eslint-disable-next-line no-param-reassign
+                listenedChannel.timeout = setTimeout((channel, botUser) => {
+                  if (channel.permissionsFor(botUser).hasPermission('MANAGE_CHANNELS')) {
+                    channel.delete();
+                  }
+                }, 300000, currChannel, this.client.user);
+              } else if (listenedChannel.timeout) {
+                clearTimeout(listenedChannel.timeout);
+              }
+            } else if (listenedChannel.channel.id === newUser.voiceChannel.id) {
+              const currChannel = oldUser.guild.channels.get(listenedChannel.channel.id);
+              if (currChannel.members.length === 0) {
+                clearTimeout(listenedChannel.timeout);
+                // eslint-disable-next-line no-param-reassign
+                listenedChannel.timeout = setTimeout((channel, botUser) => {
+                  if (channel.permissionsFor(botUser).hasPermission('MANAGE_CHANNELS')) {
+                    channel.delete();
+                  }
+                }, 300000, currChannel, this.client.user);
+              } else if (listenedChannel.timeout) {
+                clearTimeout(listenedChannel.timeout);
+              }
+            }
+          });
+        }
+        const indexesToRemove = [];
+        this.listenedChannels.forEach((listenedChannel, index) => {
+          if (!this.client.channels.get(listenedChannel.id)) {
+            listenedChannel.text.delete();
+            indexesToRemove.push(index);
+          }
+        });
+
+        indexesToRemove.forEach(index => this.listenedChannels.splice(index, 1));
+      }
+    }
   }
 }
 

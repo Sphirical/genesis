@@ -29,9 +29,6 @@ class Help extends Command {
    * @param {Message} message Message to reply to
    */
   run(message) {
-    if (!this.helpEmbed) {
-      this.makeHelpEmbed();
-    }
     if (message.channel.type !== 'dm') {
       message.reply(this.helpReplyMsg)
         .then((reply) => {
@@ -40,53 +37,60 @@ class Help extends Command {
           }
         }).catch(this.logger.error);
     }
-    const promises = [
-      message.author.sendEmbed(this.helpEmbed).then(() => {
-        if (message.deletable) {
-          message.delete(2000);
-        }
-      }),
-    ];
+    this.sendHelpEmbed(message);
 
     if (message.author.id === this.bot.owner) {
-      promises.push(message.author.sendEmbed(this.makeOwnerOnlyEmbed()));
+      this.sendOwnerOnlyEmbed(message);
     }
-    Promise.all(promises).catch(this.logger.error);
   }
 
-  makeHelpEmbed() {
-    this.helpEmbed = {
+  sendHelpEmbed(message) {
+    const helpEmbed = {
       type: 'rich',
       thumbnail: {
         url: 'https://github.com/aliasfalse/genesis/raw/master/src/resources/cephalontransparent.png',
       },
     };
 
-    const commands = this.commandHandler.commands.filter(c => !c.ownerOnly)
-      .map(c => c.usages.map(u => ({
-        name: `${this.bot.prefix}${c.call} ${u.parameters.map(p => `<${p}>`).join(u.separator ? u.separator : ' ')}`,
-        value: u.description,
-        inline: false,
-      }
-    )));
+    this.bot.settings.getChannelPrefix(message.channel).then((prefix) => {
+      const commands = this.commandHandler.commands.filter(c => !c.ownerOnly)
+        .map(c => c.usages.map(u => ({
+          name: `${prefix}${c.call} ${u.parameters.map(p => `<${p}>`).join(u.separator ? u.separator : ' ')}`,
+          value: u.description,
+          inline: false,
+        }
+      )));
 
-    this.helpEmbed.fields = [].concat(...commands);
+      helpEmbed.fields = [].concat(...commands);
+
+      return message.author.sendEmbed(helpEmbed).then(() => {
+        if (message.deletable) {
+          message.delete(2000);
+        }
+      });
+    }).catch(this.logger.error);
   }
 
-  makeOwnerOnlyEmbed() {
-    const ownerCommands = this.commandHandler.commands.filter(c => c.ownerOnly)
-      .map(c => c.usages.map(u => ({
-        name: `${this.bot.prefix}${c.call} ${u.parameters.map(p => `<${p}>`).join(' ')}`,
-        value: u.description,
-        inline: false,
-      })));
-    const embed = {
-      title: 'Owner only',
-      fields: [].concat(...ownerCommands),
-      color: 0xff0000,
-    };
+  sendOwnerOnlyEmbed(message) {
+    this.bot.settings.getChannelPrefix(message.channel).then((prefix) => {
+      const ownerCommands = this.commandHandler.commands.filter(c => c.ownerOnly)
+        .map(c => c.usages.map(u => ({
+          name: `${prefix}${c.call} ${u.parameters.map(p => `<${p}>`).join(' ')}`,
+          value: u.description,
+          inline: false,
+        })));
+      const embed = {
+        title: 'Owner only',
+        fields: [].concat(...ownerCommands),
+        color: 0xff0000,
+      };
 
-    return embed;
+      return message.author.sendEmbed(embed).then(() => {
+        if (message.deletable) {
+          message.delete(2000);
+        }
+      });
+    }).catch(this.logger.error);
   }
 }
 

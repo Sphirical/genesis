@@ -36,15 +36,23 @@ class Database {
 
   /**
    * Creates the required tables in the database
-   * @param {Client} client for pulling guild information
    * @returns {Promise}
    */
-  createSchema(client) {
+  createSchema() {
     const promises = Promise.mapSeries(schema, q => this.db.query(q));
-    client.guilds.array().forEach((guild) => {
-      promises.push(this.addGuild(guild));
-    });
     return promises;
+  }
+
+  /**
+   * Initialize data for guilds in channels for existing guilds
+   * @param {Client} client for pulling guild information
+   */
+  ensureData(client) {
+    const promises = [];
+    client.guilds.array().forEach((guild) => {
+      promises.push(this.addGuild(guild).then(this.bot.logger.debug));
+    });
+    promises.forEach(this.bot.logger.error);
   }
 
   /**
@@ -242,7 +250,15 @@ class Database {
   getChannelPrefix(channel) {
     const query = SQL`SELECT prefix FROM channels WHERE id = ${channel.id};`;
     return this.db.query(query)
-      .then(res => res[0][0].prefix);
+      .then((res) => {
+        let returnval = null;
+        if (res[0] && res[0][0]) {
+          returnval = res[0][0].prefix;
+        } else {
+          returnval = this.bot.prefix;
+        }
+        return returnval;
+      });
   }
 
   /**

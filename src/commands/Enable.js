@@ -6,7 +6,7 @@ const EnableInfoEmbed = require('../embeds/EnableInfoEmbed.js');
 
 class Enable extends Command {
   constructor(bot) {
-    super(bot, 'settings.enable', 'enable <command id> in <channel> for <role|user>');
+    super(bot, 'settings.enable', 'enable', 'Enable a command.');
     this.usages = [
       { description: 'Enable a command for a role in a channel or channels', parameters: ['command id> in <channel> for <role|user'] },
     ];

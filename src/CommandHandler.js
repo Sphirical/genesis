@@ -134,7 +134,7 @@ class CommandHandler {
                 });
             });
         }
-      } else if (message.channel.type === 'dm') {
+      } else if (message.channel.type === 'dm' && command.allowDM) {
         resolve(true);
       } else {
         resolve(false);

@@ -6,7 +6,7 @@ const EnableInfoEmbed = require('../embeds/EnableInfoEmbed.js');
 
 class Disable extends Command {
   constructor(bot) {
-    super(bot, 'settings.disable', 'disable <command id> in <channel> for <role|user>');
+    super(bot, 'settings.disable', 'disable', 'Disable a command.');
     this.usages = [
       { description: 'Disable a command for a role in a channel or channels', parameters: ['command id> in <channel> for <role|user'] },
     ];
