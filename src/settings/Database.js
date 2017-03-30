@@ -32,6 +32,7 @@ class Database {
     Object.assign(opts, dbOptions);
     this.db = mysql.createPool(opts);
     this.bot = bot;
+    this.logger = bot.logger;
 
     this.defaults = {
       prefix: '/',
@@ -63,7 +64,7 @@ class Database {
       .then((results) => {
         results.forEach((result) => {
           if (!result.isFulfilled()) {
-            this.bot.logger.error(result.reason());
+            this.logger.error(result.reason());
           }
         });
       });
@@ -395,25 +396,34 @@ class Database {
    * @param {string} type The type of the event
    * @param {string} platform The platform of the event
    * @param {Array.<string>} items The items in the reward that is being notified
-   * @returns {Promise.<Array.<{channel_id: string, webhook: string, ping: string}>>}
+   * @returns {Promise.<Array.<{channel_id: string, webhook: string}>>}
    */
   getNotifications(type, platform, items) {
-    const query = SQL`SELECT channel.id AS channel_id, channel.webhook AS webhook,
-      GROUP_CONCAT(pings.text SEPARATOR '\n') AS ping
-      FROM type_notifications ```
-      .append(items ? 'LEFT JOIN item_notifications USING (channel_id) ' : '')
-      .append('INNER JOIN channels ON type_notifications.channel_id = channels.id')
-      .append('LEFT JOIN pings ON channels.guild_id = pings.guild_id AND ( ')
-      .append(items ? '(item_notifications.item = pings.item_or_type AND item_notifications.ping = TRUE) OR ' : '')
-      .append(SQL```(type_notifications.type = pings.item_or_type AND type_notifications.ping = TRUE)
-      )
-      WHERE
-        type_notifications.type = ${type} AND
-        (IFNULL(channels.guild_id, 0) >> 22) % ${this.bot.shardCount} = ${this.bot.shardId} AND
-        channels.platform = ${platform} ```)
-      .append(items ? SQL```AND notifications.item IN (${items}) ``` : '')
-      .append('GROUP BY notifications.channel_id;');
-    return this.db.query(query);
+    try {
+      const query = SQL`SELECT channels.id, channels.webhook AS webhook
+          FROM type_notifications`
+      .append(items ?
+              SQL`
+        INNER JOIN item_notifications
+        ON type_notifications.channel_id = item_notifications.channel_id` : '')
+      .append(SQL`
+        INNER JOIN channels
+        ON channels.id = type_notifications.channel_id`)
+      .append(SQL`
+        INNER JOIN settings
+        ON channels.id = settings.channel_id`)
+      .append(SQL`
+        WHERE type_notifications.type = ${String(type)}
+          AND MOD(IFNULL(channels.guild_id, 0) >> 22, ${this.bot.shardCount}) = ${this.bot.shardId}
+          AND settings.setting = "platform"
+          AND settings.val = ${platform || 'pc'} `)
+      .append(items ? SQL`AND item_notifications.item IN (${items})
+          AND item_notifications.channel_id = settings.channel_id;` : SQL`;`);
+      return this.db.query(query);
+    } catch (e) {
+      this.logger.error(e);
+      return null;
+    }
   }
 
   /**

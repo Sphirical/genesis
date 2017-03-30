@@ -82,7 +82,7 @@ class MessaageManager {
   }
 
   /**
-   * Send a message, with options to delete messages after calling
+   * Send an embed, with options to delete messages after calling
    * @param {Message} message original message being responded to
    * @param {Object} embed Embed object to send
    * @param {boolean} deleteOriginal True to delete the original message
@@ -98,6 +98,24 @@ class MessaageManager {
       }));
     }
     promises.forEach(promise => promise.catch(this.logger.error));
+  }
+
+  /**
+   * Send an embed
+   * @param {number} channelId original message being responded to
+   * @param {Object} embed Embed object to send
+   * @param {string} prepend String to prepend to the embed
+   */
+  embedToChannel(channelId, embed, prepend) {
+    const channel = this.client.channels.get(channelId);
+    if (channel
+      && ((channel.type === 'text'
+      && channel.permissionsFor(this.client.user.id).hasPermission('SEND_MESSAGES'))
+      || channel.type === 'dm')) {
+      channel.sendMessage(prepend, { embed })
+          .then(msg => this.logger.debug(`${prepend} : ${embed}\n${msg}`))
+          .catch(this.logger.error);
+    }
   }
 
   /**
@@ -160,6 +178,13 @@ class MessaageManager {
     promises.forEach(promise => promise.catch(this.logger.error));
   }
 
+  /**
+   * Delete call and response for a command, depending on settings
+   * @param  {Message} call           calling command
+   * @param  {Message} response       response message
+   * @param  {boolean} deleteCall     whether or not to delete the calling message
+   * @param  {boolean} deleteResponse whether or not to delete the message response
+   */
   deleteCallAndResponse(call, response, deleteCall, deleteResponse) {
     const promises = [];
     this.settings.getChannelDeleteAfterResponse(call.channel)
@@ -175,6 +200,16 @@ class MessaageManager {
       })
       .catch(this.logger.error);
     promises.forEach(promise => promise.catch(this.logger.error));
+  }
+
+  webhook(webhookId, embed) {
+    // 295656119320313856
+    this.bot.client.fetchWebhook(webhookId).sendSlackMessage({
+      username: this.bot.client.user.username,
+      attachments: [embed],
+    })
+    .then(() => this.logger.debug(`Sent message to ${webhookId} webhook.`))
+    .catch(this.logger.error);
   }
 }
 

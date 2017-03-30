@@ -35,13 +35,15 @@ levels.forEach((level) => {
       console.log(`[${level}] ${message}`);
     }
 
-    if (level === 'fatal') {
+    if (level.toLowerCase() === 'fatal') {
       this.ravenClient.captureMessage(message, {
         level: 'fatal',
       });
     }
-    if (level === 'error') {
-      this.ravenClient.captureException(message);
+    if (level.toLowerCase() === 'error') {
+      // eslint-disable-next-line no-console
+      console.error(`[${level}] ${message}\n${message.fileName}\n${message.stack}`);
+      // this.ravenClient.captureException(message);
     }
   };
 });
