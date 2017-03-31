@@ -679,6 +679,26 @@ class Database {
     return this.db.query(query)
     .then(res => res);
   }
+
+  setNotifiedIds(platform, shardId, notifiedIds) {
+    const query = SQL`INSERT INTO notified_ids VALUES
+      (${platform}, ${shardId}, ${notifiedIds})
+      ON DUPLICATE KEY UPDATE id_list = ${notifiedIds};`;
+    return this.db.query(query);
+  }
+
+  getNotifiedIds(platform, shardId) {
+    const query = SQL`SELECT id_list
+      FROM notified_ids
+      WHERE shard_id=${shardId} AND platform=${platform};`;
+    return this.db.query(query)
+    .then((res) => {
+      if (res[0].length === 0) {
+        return [];
+      }
+      return res[0][0].id_list;
+    });
+  }
 }
 
 module.exports = Database;

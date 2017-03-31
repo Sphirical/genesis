@@ -10,6 +10,7 @@ class Notifier {
     this.logger = bot.logger;
     this.ids = {};
     this.messageManager = bot.MessageManager;
+    this.settings = bot.settings;
   }
 
   start() {
@@ -20,13 +21,16 @@ class Notifier {
   }
 
   onNewData(platform, newData) {
+    let notifiedIds = [];
     this.getNotifiedIds(platform).then((ids) => {
       const alertsToNotify = newData.alerts
         .filter(a => !ids.includes(a.id) && a.getRewardTypes().length);
       const invasionsToNotify = newData.invasions
         .filter(i => !ids.includes(i.id) && i.getRewardTypes().length);
-      this.updateNotified(newData.alerts.map(a => a.id), platform);
-      this.updateNotified(newData.invasions.map(i => i.id), platform);
+      notifiedIds = notifiedIds.concat(newData.alerts.map(a => a.id));
+      notifiedIds = notifiedIds.concat(newData.invasions.map(i => i.id));
+      this.updateNotified(notifiedIds, platform);
+
       this.sendAlerts(alertsToNotify, platform);
       this.sendInvasions(invasionsToNotify, platform);
     }).catch(this.logger.error);
@@ -47,7 +51,9 @@ class Notifier {
   }
 
   updateNotified(ids, platform) {
-    this.ids[platform] = this.ids[platform] ? this.ids[platform].concat(ids) : ids;
+    // TODO: set these on the database so they are Persistent over restarts
+    this.
+    //this.ids[platform] = ids;
   }
 
   sendAlerts(newAlerts, platform) {
