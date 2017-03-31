@@ -54,10 +54,10 @@ module.exports = [
     PRIMARY KEY (channel_id, setting),
     FOREIGN KEY (channel_id) REFERENCES channels(id)
   );`,
-  `CREATE TABLE IF NOT EXISTS notifiedIds (
+  `CREATE TABLE IF NOT EXISTS notified_ids (
     shard_id BIGINT UNSIGNED NOT NULL,
     platform VARCHAR(3) NOT NULL DEFAULT 'pc',
-    notified_ids JSON NOT NULL DEFAULT '[]',
+    id_list JSON NOT NULL,
     PRIMARY KEY (shard_id, platform)
   )`,
 ];

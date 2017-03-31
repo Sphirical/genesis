@@ -417,7 +417,7 @@ class Database {
           AND MOD(IFNULL(channels.guild_id, 0) >> 22, ${this.bot.shardCount}) = ${this.bot.shardId}
           AND settings.setting = "platform"
           AND settings.val = ${platform || 'pc'} `)
-      .append(items ? SQL`AND item_notifications.item IN (${items})
+      .append(items && items.length > 0 ? SQL`AND item_notifications.item IN (${items})
           AND item_notifications.channel_id = settings.channel_id;` : SQL`;`);
       return this.db.query(query);
     } catch (e) {
@@ -639,6 +639,11 @@ class Database {
       });
   }
 
+  /**
+   * Remove guild from database
+   * @param  {snowflake} guild Guild to be removed from database
+   * @returns {Promise.<string>} status of removal
+   */
   removeGuild(guild) {
     const channelIds = guild.channels.keyArray();
     const permissionResults = [];
@@ -656,37 +661,70 @@ class Database {
     .then(res => res);
   }
 
+  /**
+   * Remove permissions corresponding to the guild id
+   * @param  {snowflake} guildId guild identifier for removal
+   * @returns {Promise.<string>} status of removal
+   */
   removeGuildPermissions(guildId) {
     const query = SQL`DELETE FROM guild_permissions WHERE guild_id = ${guildId}`;
     return this.db.query(query)
       .then(res => res);
   }
 
+  /**
+   * Remove permissions corresponding to the guild id
+   * @param  {snowflake} channelId channel identifier for removal
+   * @returns {Promise.<string>} status of removal
+   */
   removeChannelPermissions(channelId) {
     const query = SQL`DELETE FROM channel_permisions WHERE channel_id = ${channelId}`;
     return this.db.query(query)
     .then(res => res);
   }
 
+  /**
+   * Remove permissions corresponding to the channel id
+   * @param  {snowflake} channelId channel identifier for removal
+   * @returns {Promise.<string>} status of removal
+   */
   removeItemNotifications(channelId) {
     const query = SQL`DELETE FROM item_notifications WHERE channel_id = ${channelId}`;
     return this.db.query(query)
     .then(res => res);
   }
 
+  /**
+   * Remove pings corresponding to the guild id
+   * @param  {snowflake} guildId guild identifier for removal
+   * @returns {Promise.<string>} status of removal
+   */
   removePings(guildId) {
     const query = SQL`DELETE FROM pings WHERE guild_id = ${guildId}`;
     return this.db.query(query)
     .then(res => res);
   }
 
+  /**
+   * Set the notified ids for a given platform and shard id
+   * @param {string} platform    platform corresponding to notified ids
+   * @param {number} shardId     shard id corresponding to notified ids
+   * @param {JSON} notifiedIds list of oids that have been notifiedIds
+   * @returns {Promise}
+   */
   setNotifiedIds(platform, shardId, notifiedIds) {
     const query = SQL`INSERT INTO notified_ids VALUES
-      (${platform}, ${shardId}, ${notifiedIds})
-      ON DUPLICATE KEY UPDATE id_list = ${notifiedIds};`;
+      (${shardId}, ${platform}, JSON_ARRAY(${notifiedIds}))
+      ON DUPLICATE KEY UPDATE id_list = JSON_ARRAY(${notifiedIds});`;
     return this.db.query(query);
   }
 
+  /**
+   * Get list of notified ids for the given platform and shard id
+   * @param  {string} platform Platform
+   * @param  {number} shardId  Identifier of the corresponding shard
+   * @returns {Promise.<Array>} Array of notified oids
+   */
   getNotifiedIds(platform, shardId) {
     const query = SQL`SELECT id_list
       FROM notified_ids
