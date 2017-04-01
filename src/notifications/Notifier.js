@@ -2,6 +2,7 @@
 
 const Promise = require('bluebird');
 const AlertEmbed = require('../embeds/AlertEmbed.js');
+const FissureEmbed = require('../embeds/FissureEmbed.js');
 const InvasionEmbed = require('../embeds/InvasionEmbed.js');
 const SortieEmbed = require('../embeds/SortieEmbed.js');
 
@@ -39,9 +40,13 @@ class Notifier {
         .filter(a => !ids.includes(a.id) && a.getRewardTypes().length && !a.getExpired());
       const invasionsToNotify = newData.invasions
         .filter(i => !ids.includes(i.id) && i.getRewardTypes().length);
-      notifiedIds = notifiedIds.concat(newData.alerts.map(a => a.id))
+      const fissuresToNotify = newData.fissures
+        .filter(f => !ids.includes(f.id) && !f.getExpired());
+      notifiedIds = notifiedIds
+                    .concat(newData.alerts.map(a => a.id))
                     .concat(newData.invasions.map(i => i.id))
-                    .concat([newData.sortie.id]);
+                    .concat(newData.sortie ? [newData.sortie.id] : [])
+                    .concat(newData.fissures.map(f => f.id));
 
       this.updateNotified(notifiedIds, platform);
 
@@ -49,6 +54,7 @@ class Notifier {
       this.sendInvasions(invasionsToNotify, platform);
       this.sendSortie(!(ids.includes(newData.sortie.id)
         || newData.sortie.isExpired()) ? newData.sortie : null, platform);
+      this.sendFissures(fissuresToNotify, platform);
     }).catch(this.logger.error);
   }
 
@@ -86,8 +92,6 @@ class Notifier {
    * @returns {Promise}
    */
   updateNotified(ids, platform) {
-    // TODO: set these on the database so they are Persistent over restarts
-    // this.ids[platform] = ids;
     return this.settings.setNotifiedIds(platform, this.bot.shardId, ids)
       .catch(this.logger.error);
   }
@@ -97,6 +101,14 @@ class Notifier {
       const embed = new AlertEmbed(this.bot, [a]);
       embed.color = 0x00ff00;
       return this.broadcast(embed, platform, 'alerts', a.getRewardTypes());
+    });
+  }
+
+  sendFissures(newFissures, platform) {
+    Promise.map(newFissures, (f) => {
+      const embed = new FissureEmbed(this.bot, [f]);
+      embed.color = 0x00ff00;
+      return this.broadcast(embed, platform, 'fissures', []);
     });
   }
 
@@ -111,7 +123,7 @@ class Notifier {
   sendSortie(newSortie, platform) {
     const embed = new SortieEmbed(this.bot, newSortie);
     embed.color = 0x00ff00;
-    return this.broadcast(embed, platform, 'sortie');
+    return this.broadcast(embed, platform, 'sortie', []);
   }
 }
 

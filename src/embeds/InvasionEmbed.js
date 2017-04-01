@@ -39,8 +39,8 @@ class InvasionEmbed extends BaseEmbed {
       this.description = i.desc;
       this.fields = [
         { name: 'Location', value: i.node, inline: true },
+        { name: '_ _', value: `${i.getETAString().replace('Infinityd', '\u221E')} remaining | ${new Date().toLocaleString()}` },
       ];
-      this.footer.text = `${i.getETAString()} remaining | ${new Date().toLocaleString()} | Warframe Community Developers`;
     }
 
     this.thumbnail = {

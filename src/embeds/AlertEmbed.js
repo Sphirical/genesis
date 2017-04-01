@@ -39,11 +39,11 @@ class AlertEmbed extends BaseEmbed {
       }
       this.fields.push({ name: '_ _', value: `**Levels:** ${a.mission.minEnemyLevel} - ${a.mission.maxEnemyLevel}`, inline: true });
 
-      this.footer.text = `${a.getETAString()} remaining | ${new Date().toLocaleString()} | Warframe Community Developers`;
-
       if (this.title.indexOf('cr') === -1) {
         this.fields.push({ name: '_ _', value: `**Credits:** ${a.getReward().credits}cr`, inline: true });
       }
+
+      this.fields.push({ name: '_ _', value: `${a.getETAString()} remaining | ${new Date().toLocaleString()}` });
     }
   }
 }
