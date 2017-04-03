@@ -35,7 +35,7 @@ class Settings extends Command {
       .then((items) => {
         settings.push({
           name: 'Tracked Items',
-          value: items.length > 0 ? `\n${items.join('; ')}` : 'No Tracked Items',
+          value: items.length > 0 ? `\n${items.join(' ')}` : 'No Tracked Items',
           inline: true,
         });
         return this.bot.settings.getTrackedEventTypes(message.channel);
@@ -43,7 +43,7 @@ class Settings extends Command {
       .then((types) => {
         settings.push({
           name: 'Tracked Events',
-          value: types.length > 0 ? `\n${types.join('; ')}` : 'No Tracked Event Types',
+          value: types.length > 0 ? `\n${types.join(' ')}` : 'No Tracked Event Types',
           inline: true,
         });
         const embed = new SettingsEmbed(this.bot, message.channel, settings);

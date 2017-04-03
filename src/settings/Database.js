@@ -262,9 +262,15 @@ class Database {
     .then((res) => {
       if (res[0].length === 0) {
         if (channel.type === 'text') {
-          return this.addGuildTextChannel(channel).then(() => this.defaults[`${setting}`]);
+          return this.addGuildTextChannel(channel)
+          .then(() => this.setChannelSetting(channel, setting, this.defaults[`${setting}`]))
+          .then(() => this.defaults[`${setting}`])
+          ;
         }
-        return this.addDMChannel(channel).then(() => this.defaults[`${setting}`]);
+        return this.addDMChannel(channel)
+        .then(() => this.setChannelSetting(channel, setting, this.defaults[`${setting}`]))
+        .then(() => this.defaults[`${setting}`])
+        ;
       }
       return res[0][0].val;
     });
@@ -400,23 +406,16 @@ class Database {
    */
   getNotifications(type, platform, items) {
     try {
-      const query = SQL`SELECT channels.id, channels.webhook AS webhook
+      const query = SQL`SELECT DISTINCT channels.id as channelId
           FROM type_notifications`
-      .append(items ?
-              SQL`
-        INNER JOIN item_notifications
-        ON type_notifications.channel_id = item_notifications.channel_id` : '')
-      .append(SQL`
-        INNER JOIN channels
-        ON channels.id = type_notifications.channel_id`)
-      .append(SQL`
-        INNER JOIN settings
-        ON channels.id = settings.channel_id`)
+      .append(items && items.length > 0 ?
+              SQL` INNER JOIN item_notifications ON type_notifications.channel_id = item_notifications.channel_id` : SQL``)
+      .append(SQL` INNER JOIN channels ON channels.id = type_notifications.channel_id`)
+      .append(SQL` INNER JOIN settings ON channels.id = settings.channel_id`)
       .append(SQL`
         WHERE type_notifications.type = ${String(type)}
           AND MOD(IFNULL(channels.guild_id, 0) >> 22, ${this.bot.shardCount}) = ${this.bot.shardId}
-          AND settings.setting = "platform"
-          AND settings.val = ${platform || 'pc'} `)
+          AND settings.setting = "platform"  AND settings.val = ${platform || 'pc'} `)
       .append(items && items.length > 0 ? SQL`AND item_notifications.item IN (${items})
           AND item_notifications.channel_id = settings.channel_id;` : SQL`;`);
       return this.db.query(query);

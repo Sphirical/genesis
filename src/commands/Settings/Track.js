@@ -1,19 +1,20 @@
 'use strict';
 
 const Command = require('../../Command.js');
+const eventTypes = require('../../resources/trackables.json').eventTypes;
 const rewardTypes = require('../../resources/trackables.json').rewardTypes;
 
 /**
  * Sets the current guild's custom prefix
  */
-class TrackItem extends Command {
+class Track extends Command {
   constructor(bot) {
-    super(bot, 'settings.track.item', 'track item');
+    super(bot, 'settings.track', 'track');
     this.usages = [
-      { description: 'Show tracking command for tracking items', parameters: [] },
-      { description: 'Track an item or items', parameters: ['item(s) to track'] },
+      { description: 'Show tracking command for tracking events', parameters: [] },
+      { description: 'Track an event or events', parameters: ['event(s) to track'] },
     ];
-    this.regex = new RegExp(`^${this.call}s?(?:\\s?(${rewardTypes.join('|')}|all))?`, 'i');
+    this.regex = new RegExp(`^${this.call}s?(?:\\s+(${eventTypes.join('|')}|${rewardTypes.join('|')}|all)*)?`, 'i');
   }
 
   /**
@@ -22,7 +23,7 @@ class TrackItem extends Command {
    *                          or perform an action based on parameters.
    */
   run(message) {
-    const unsplitItems = message.strippedContent.match(this.regex)[1];
+    const unsplitItems = message.strippedContent.replace(`${this.call} `, '');
     if (!unsplitItems) {
       this.sendInstructionEmbed(message);
       return;
@@ -30,25 +31,28 @@ class TrackItem extends Command {
 
     const items = unsplitItems.split(' ');
     let itemsToTrack = [];
+    let eventsToTrack = [];
     if (items[0] === 'all') {
+      eventsToTrack = itemsToTrack.concat(eventTypes);
       itemsToTrack = itemsToTrack.concat(rewardTypes);
     } else {
-      const invalidItems = [];
       items.forEach((item) => {
         if (rewardTypes.includes(item.trim())) {
           itemsToTrack.push(item.trim());
+        } else if (eventTypes.includes(item.trim())) {
+          eventsToTrack.push(item.trim());
         } else {
-          invalidItems.push(item.trim());
-        }
-        if (invalidItems.length > 0) {
-          this.sendInstructionEmbed(message, invalidItems);
+          this.sendInstructionEmbed(message);
         }
       });
     }
 
     const promises = [];
+    eventsToTrack.forEach(event => promises.push(this.bot.settings
+      .trackEventType(message.channel, event)));
     itemsToTrack.forEach(item => promises.push(this.bot.settings
       .trackItem(message.channel, item)));
+
     promises.forEach(promise => promise.catch(this.logger.error));
     this.messageManager.notifySettingsChange(message, true, true);
   }
@@ -61,17 +65,26 @@ class TrackItem extends Command {
         color: 0x0000ff,
         fields: [
           {
-            name: `${prefix}${this.call} <item to track>`,
-            value: 'Track items to be alerted in this channel.',
+            name: `${prefix}${this.call} <event(s)/item(s) to track>`,
+            value: 'Track events/items to be alerted in this channel.',
           },
           {
             name: 'Possible values:',
-            value: `\n${rewardTypes.join('\n')}`,
+            value: '_ _',
+          },
+          {
+            name: '**Events:**',
+            value: eventTypes.join('\n'),
+            inline: true,
+          },
+          {
+            name: '**Rewards:**',
+            value: rewardTypes.join('\n'),
+            inline: true,
           },
         ],
-      }, true, false))
-      .catch(this.logger.error);
+      }, true, false));
   }
 }
 
-module.exports = TrackItem;
+module.exports = Track;

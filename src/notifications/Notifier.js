@@ -42,19 +42,22 @@ class Notifier {
         .filter(i => !ids.includes(i.id) && i.getRewardTypes().length);
       const fissuresToNotify = newData.fissures
         .filter(f => !ids.includes(f.id) && !f.getExpired());
+      const sortieToNotify = newData.sortie && !ids.includes(newData.sortie.id)
+        && !newData.sortie.isExpired() ? newData.sortie : undefined;
       notifiedIds = notifiedIds
                     .concat(newData.alerts.map(a => a.id))
+                    .concat(newData.fissures.map(f => f.id))
                     .concat(newData.invasions.map(i => i.id))
-                    .concat(newData.sortie ? [newData.sortie.id] : [])
-                    .concat(newData.fissures.map(f => f.id));
+                    .concat(newData.sortie ? [newData.sortie.id] : []);
 
       this.updateNotified(notifiedIds, platform);
 
       this.sendAlerts(alertsToNotify, platform);
-      this.sendInvasions(invasionsToNotify, platform);
-      this.sendSortie(!(ids.includes(newData.sortie.id)
-        || newData.sortie.isExpired()) ? newData.sortie : null, platform);
       this.sendFissures(fissuresToNotify, platform);
+      this.sendInvasions(invasionsToNotify, platform);
+      if (sortieToNotify) {
+        this.sendSortie(sortieToNotify, platform);
+      }
     }).catch(this.logger.error);
   }
 
@@ -68,12 +71,9 @@ class Notifier {
    */
   broadcast(embed, platform, type, items = []) {
     return this.bot.settings.getNotifications(type, platform, items)
-    .then(channels => Promise.map(channels,
-      (listOfChannels) => {
-        listOfChannels.forEach((channel) => {
-          this.bot.messageManager.embedToChannel(channel.id, embed, `@${type}`);
-        });
-      }));
+    .then(channels => Promise.map(channels, (channelRes) => {
+      this.bot.messageManager.embedToChannel(channelRes.channelId, embed, `@${type}`);
+    }));
   }
 
   /**
@@ -99,31 +99,35 @@ class Notifier {
   sendAlerts(newAlerts, platform) {
     Promise.map(newAlerts, (a) => {
       const embed = new AlertEmbed(this.bot, [a]);
-      embed.color = 0x00ff00;
-      return this.broadcast(embed, platform, 'alerts', a.getRewardTypes());
+      this.broadcast(embed, platform, 'alerts', a.getRewardTypes())
+        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
+        .catch(this.logger.error);
     });
   }
 
   sendFissures(newFissures, platform) {
-    Promise.map(newFissures, (f) => {
-      const embed = new FissureEmbed(this.bot, [f]);
-      embed.color = 0x00ff00;
-      return this.broadcast(embed, platform, 'fissures', []);
+    Promise.map(newFissures, (a) => {
+      const embed = new FissureEmbed(this.bot, [a]);
+      this.broadcast(embed, platform, 'fissures', null)
+        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
+        .catch(this.logger.error);
     });
   }
 
   sendInvasions(newInvasions, platform) {
     Promise.map(newInvasions, (i) => {
       const embed = new InvasionEmbed(this.bot, [i]);
-      embed.color = 0x00ff00;
-      return this.broadcast(embed, platform, 'invasions', i.getRewardTypes());
+      this.broadcast(embed, platform, 'invasions')
+        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
+        .catch(this.logger.error);
     });
   }
 
   sendSortie(newSortie, platform) {
     const embed = new SortieEmbed(this.bot, newSortie);
-    embed.color = 0x00ff00;
-    return this.broadcast(embed, platform, 'sortie', []);
+    this.broadcast(embed, platform, 'sorties', null)
+      // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
+      .catch(this.logger.error);
   }
 }
 

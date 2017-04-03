@@ -43,7 +43,7 @@ class AlertEmbed extends BaseEmbed {
         this.fields.push({ name: '_ _', value: `**Credits:** ${a.getReward().credits}cr`, inline: true });
       }
 
-      this.fields.push({ name: '_ _', value: `${a.getETAString()} remaining | ${new Date().toLocaleString()}` });
+      this.footer.text = `${a.getETAString()} remaining | ${new Date().toLocaleString()}`;
     }
   }
 }

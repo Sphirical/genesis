@@ -113,8 +113,8 @@ class MessaageManager {
       && channel.permissionsFor(this.client.user.id).hasPermission('SEND_MESSAGES'))
       || channel.type === 'dm')) {
       channel.sendMessage(prepend, { embed })
-          .then(msg => this.logger.debug(`${prepend} : ${embed}\n${msg}`))
-          .catch(this.logger.error);
+      .then(msg => `Sent ${msg.content} to ${channelId}\n${JSON.stringify(embed)}`)
+      .catch(this.logger.error);
     }
   }
 
@@ -203,12 +203,10 @@ class MessaageManager {
   }
 
   webhook(webhookId, embed) {
-    // 295656119320313856
     this.bot.client.fetchWebhook(webhookId).sendSlackMessage({
       username: this.bot.client.user.username,
       attachments: [embed],
     })
-    .then(() => this.logger.debug(`Sent message to ${webhookId} webhook.`))
     .catch(this.logger.error);
   }
 }
