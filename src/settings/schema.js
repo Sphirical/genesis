@@ -59,5 +59,5 @@ module.exports = [
     platform VARCHAR(3) NOT NULL DEFAULT 'pc',
     id_list JSON NOT NULL,
     PRIMARY KEY (shard_id, platform)
-  )`,
+  );`,
 ];

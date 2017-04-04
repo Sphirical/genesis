@@ -102,20 +102,19 @@ class MessaageManager {
 
   /**
    * Send an embed
-   * @param {number} channelId original message being responded to
+   * @param {Channel} channel channel to send message to
    * @param {Object} embed Embed object to send
    * @param {string} prepend String to prepend to the embed
+   * @returns {Promise<Message>}
    */
-  embedToChannel(channelId, embed, prepend) {
-    const channel = this.client.channels.get(channelId);
+  embedToChannel(channel, embed, prepend) {
     if (channel
       && ((channel.type === 'text'
       && channel.permissionsFor(this.client.user.id).hasPermission('SEND_MESSAGES'))
       || channel.type === 'dm')) {
-      channel.sendMessage(prepend, { embed })
-      .then(msg => `Sent ${msg.content} to ${channelId}\n${JSON.stringify(embed)}`)
-      .catch(this.logger.error);
+      return channel.sendMessage(prepend, { embed });
     }
+    return null;
   }
 
   /**

@@ -7,14 +7,14 @@ const rewardTypes = require('../../resources/trackables.json').rewardTypes;
 /**
  * Sets the current guild's custom prefix
  */
-class Untrack extends Command {
+class EnablePingEvent extends Command {
   constructor(bot) {
-    super(bot, 'settings.untrack', 'untrack');
+    super(bot, 'settings.ping.enable', 'ping on');
     this.usages = [
-      { description: 'Show tracking command for tracking events', parameters: [] },
-      { description: 'Track an event or events', parameters: ['event(s) to track'] },
+      { description: 'Show command for pinging for items', parameters: [] },
+      { description: 'Enable pinging for an event(s) or  or item(s)', parameters: ['event(s) or item(s) to enable ping for'] },
     ];
-    this.regex = new RegExp(`^${this.call}s?(?:(${eventTypes.join('|')}|${rewardTypes.join('|')}|all)*)?`, 'i');
+    this.regex = new RegExp(`^${this.call}?(?:\\s+(${eventTypes.join('|')}|${rewardTypes.join('|')}|all)*)?`, 'i');
   }
 
   /**
@@ -30,34 +30,33 @@ class Untrack extends Command {
     }
 
     const items = unsplitItems.split(' ');
-    let itemsToTrack = [];
-    let eventsToTrack = [];
-    let saveTrack = true;
+    let itemsToPing = [];
+    let eventsToPing = [];
+    let savePing = true;
     if (items[0] === 'all') {
-      eventsToTrack = itemsToTrack.concat(eventTypes);
-      itemsToTrack = itemsToTrack.concat(rewardTypes);
+      eventsToPing = eventsToPing.concat(eventTypes);
+      itemsToPing = itemsToPing.concat(rewardTypes);
     } else {
       items.forEach((item) => {
-        if (rewardTypes.includes(item.trim()) && saveTrack) {
-          itemsToTrack.push(item.trim());
-        } else if (eventTypes.includes(item.trim()) && saveTrack) {
-          eventsToTrack.push(item.trim());
-        } else if (eventsToTrack.length === 0 || itemsToTrack.length === 0) {
+        if (rewardTypes.includes(item.trim()) && savePing) {
+          itemsToPing.push(item.trim());
+        } else if (eventTypes.includes(item.trim()) && savePing) {
+          eventsToPing.push(item.trim());
+        } else if ((eventsToPing.length === 0 || itemsToPing.length === 0) && savePing) {
           this.sendInstructionEmbed(message);
-          saveTrack = false;
+          savePing = false;
         }
       });
     }
 
     const promises = [];
-    if (saveTrack) {
-      eventsToTrack.forEach(event => this.bot.settings
-        .untrackEventType(message.channel, event).catch(this.logger.error));
-      itemsToTrack.forEach(item => this.bot.settings
-        .untrackItem(message.channel, item).catch(this.logger.error));
+    if (savePing) {
+      eventsToPing.forEach(event => promises.push(this.bot.settings
+        .setEventTypePing(message.channel, event, true)));
+      itemsToPing.forEach(item => promises.push(this.bot.settings
+        .setItemPing(message.channel, item, true)));
       this.messageManager.notifySettingsChange(message, true, true);
     }
-
     promises.forEach(promise => promise.catch(this.logger.error));
   }
 
@@ -69,8 +68,8 @@ class Untrack extends Command {
         color: 0x0000ff,
         fields: [
           {
-            value: 'Untrack events/items to be alerted in this channel.',
-            name: `${prefix}${this.call} <event(s)/item(s) to untrack>`,
+            name: `${prefix}${this.call} <event(s)/item(s) to ping for>`,
+            value: 'Enable pinging for an event/item',
           },
           {
             name: 'Possible values:',
@@ -87,8 +86,9 @@ class Untrack extends Command {
             inline: true,
           },
         ],
-      }, true, false));
+      }, true, false))
+      .catch(this.logger.error);
   }
 }
 
-module.exports = Untrack;
+module.exports = EnablePingEvent;

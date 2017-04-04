@@ -2,9 +2,17 @@
 
 const Promise = require('bluebird');
 const AlertEmbed = require('../embeds/AlertEmbed.js');
+const ConclaveChallengeEmbed = require('../embeds/ConclaveChallengeEmbed.js');
+const DarvoEmbed = require('../embeds/DarvoEmbed.js');
+const EnemyEmbed = require('../embeds/EnemyEmbed.js');
+const EventEmbed = require('../embeds/EventEmbed.js');
 const FissureEmbed = require('../embeds/FissureEmbed.js');
 const InvasionEmbed = require('../embeds/InvasionEmbed.js');
+const NewsEmbed = require('../embeds/NewsEmbed.js');
+const SalesEmbed = require('../embeds/SalesEmbed.js');
 const SortieEmbed = require('../embeds/SortieEmbed.js');
+const SyndicateEmbed = require('../embeds/SyndicateEmbed.js');
+const VoidTraderEmbed = require('../embeds/VoidTraderEmbed.js');
 
 /**
  * Notifier for alerts, invasions, etc.
@@ -35,29 +43,94 @@ class Notifier {
    */
   onNewData(platform, newData) {
     let notifiedIds = [];
+
     this.getNotifiedIds(platform).then((ids) => {
+      // Set up data to notify
+      const acolytesToNotify = newData.persistentEnemies
+        .filter(e => !ids.includes(e.id) && e.isDiscovered);
       const alertsToNotify = newData.alerts
         .filter(a => !ids.includes(a.id) && a.getRewardTypes().length && !a.getExpired());
+      const baroToNotify = newData.voidTrader && !ids.includes(newData.voidTrader.id) ?
+        newData.voidTrader : undefined;
+      const conclaveToNotify = newData.conclaveChallenges.filter(cc => !ids.includes(cc.id));
+      const dailyDealsToNotify = newData.dailyDeals.filter(d => d.sold === 0);
+      const eventsToNotify = newData.events
+        .filter(e => !ids.includes(e.id) && !e.getExpired());
       const invasionsToNotify = newData.invasions
         .filter(i => !ids.includes(i.id) && i.getRewardTypes().length);
+      const featuredDealsToNotify = newData.flashSales
+        .filter(d => !ids.includes(d.id) && d.isFeatured);
       const fissuresToNotify = newData.fissures
         .filter(f => !ids.includes(f.id) && !f.getExpired());
+      const newsToNotify = newData.news
+        .filter(n => !ids.includes(n.id));
+      const popularDealsToNotify = newData.flashSales
+        .filter(d => !ids.includes(d.id) && d.isPopular);
+      const primeAccessToNotify = newData.news
+          .filter(n => !ids.includes(n.id) && n.isPrimeAccess());
       const sortieToNotify = newData.sortie && !ids.includes(newData.sortie.id)
         && !newData.sortie.isExpired() ? newData.sortie : undefined;
+      const syndicateToNotify = newData.syndicateMissions.filter(m => !ids.includes(m.id));
+      const updatesToNotify = newData.news
+        .filter(n => !ids.includes(n.id) && n.isUpdate());
+      // Concat all notified ids
       notifiedIds = notifiedIds
                     .concat(newData.alerts.map(a => a.id))
+                    .concat(newData.conclaveChallenges.map(c => c.id))
+                    .concat(newData.dailyDeals.map(d => d.id))
+                    .concat(newData.events.map(e => e.id))
                     .concat(newData.fissures.map(f => f.id))
+                    .concat(newData.flashSales.map(d => d.id))
                     .concat(newData.invasions.map(i => i.id))
-                    .concat(newData.sortie ? [newData.sortie.id] : []);
+                    .concat(newData.news.map(n => n.id))
+                    .concat(newData.persistentEnemies.map(p => p.id))
+                    .concat(newData.sortie ? [newData.sortie.id] : [])
+                    .concat(newData.syndicateMissions.map(m => m.id))
+                    .concat(newData.voidTrader ? [newData.voidTrader.id] : []);
 
-      this.updateNotified(notifiedIds, platform);
-
-      this.sendAlerts(alertsToNotify, platform);
-      this.sendFissures(fissuresToNotify, platform);
-      this.sendInvasions(invasionsToNotify, platform);
-      if (sortieToNotify) {
-        this.sendSortie(sortieToNotify, platform);
-      }
+      // Send all notifications
+      return this.updateNotified(notifiedIds, platform)
+        .then(() => this.sendAcolytes(acolytesToNotify, platform))
+        .then(() => this.sendAlerts(alertsToNotify, platform))
+        .then(() => {
+          if (baroToNotify) {
+            this.sendBaro(baroToNotify, platform);
+          }
+          return true;
+        })
+        .then(() => {
+          if (conclaveToNotify.length) {
+            return this.sendConclaveDailies(conclaveToNotify, platform)
+              .then(() => this.sendConclaveWeeklies(conclaveToNotify, platform));
+          }
+          return true;
+        })
+        .then(() => this.sendDarvo(dailyDealsToNotify, platform))
+        .then(() => this.sendEvent(eventsToNotify, platform))
+        .then(() => this.sendFeaturedDeals(featuredDealsToNotify, platform))
+        .then(() => this.sendFissures(fissuresToNotify, platform))
+        .then(() => this.sendNews(newsToNotify, platform))
+        .then(() => this.sendPopularDeals(popularDealsToNotify, platform))
+        .then(() => this.sendPrimeAccess(primeAccessToNotify, platform))
+        .then(() => this.sendInvasions(invasionsToNotify, platform))
+        .then(() => {
+          if (sortieToNotify) {
+            return this.sendSortie(sortieToNotify, platform);
+          }
+          return true;
+        })
+        .then(() => {
+          if (syndicateToNotify) {
+            return this.sendSyndicateArbiters(syndicateToNotify, platform)
+              .then(() => this.sendSyndicatePerrin(syndicateToNotify, platform))
+              .then(() => this.sendSyndicateSuda(syndicateToNotify, platform))
+              .then(() => this.sendSyndicateMeridian(syndicateToNotify, platform))
+              .then(() => this.sendSyndicateLoka(syndicateToNotify, platform))
+              .then(() => this.sendSyndicateVeil(syndicateToNotify, platform));
+          }
+          return true;
+        })
+        .then(() => this.sendUpdates(updatesToNotify, platform));
     }).catch(this.logger.error);
   }
 
@@ -71,9 +144,15 @@ class Notifier {
    */
   broadcast(embed, platform, type, items = []) {
     return this.bot.settings.getNotifications(type, platform, items)
-    .then(channels => Promise.map(channels, (channelRes) => {
-      this.bot.messageManager.embedToChannel(channelRes.channelId, embed, `@${type}`);
-    }));
+    .then(channels => Promise.map(channels, channelResults =>
+      channelResults.forEach((result) => {
+        const channel = this.bot.client.channels.get(result.channelId);
+        if (channel) {
+          return this.settings.getPing(channel.guild, (items || []).push(type))
+            .then(prepend => this.bot.messageManager.embedToChannel(channel, embed, prepend));
+        }
+        return null;
+      })));
   }
 
   /**
@@ -96,38 +175,131 @@ class Notifier {
       .catch(this.logger.error);
   }
 
+  sendAcolytes(newAcolytes, platform) {
+    return Promise.map(newAcolytes, (a) => {
+      const embed = new EnemyEmbed(this.bot, [a]);
+      return this.broadcast(embed, platform, 'enemies', null);
+    });
+  }
+
   sendAlerts(newAlerts, platform) {
-    Promise.map(newAlerts, (a) => {
+    return Promise.map(newAlerts, (a) => {
       const embed = new AlertEmbed(this.bot, [a]);
-      this.broadcast(embed, platform, 'alerts', a.getRewardTypes())
-        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
-        .catch(this.logger.error);
+      return this.broadcast(embed, platform, 'alerts', a.getRewardTypes());
+    });
+  }
+
+  sendBaro(newBaro, platform) {
+    const embed = new VoidTraderEmbed(this.bot, newBaro);
+    return this.broadcast(embed, platform, 'baro', null);
+  }
+
+  sendConclaveDailies(newDailies, platform) {
+    const embed = new ConclaveChallengeEmbed(this.bot, newDailies, 'day');
+    return this.broadcast(embed, platform, 'conclave.dailies', null);
+  }
+
+  sendConclaveWeeklies(newDailies, platform) {
+    const embed = new ConclaveChallengeEmbed(this.bot, newDailies, 'week');
+    return this.broadcast(embed, platform, 'conclave.weeklies', null);
+  }
+
+  sendDarvo(newDarvoDeals, platform) {
+    return Promise.map(newDarvoDeals, (d) => {
+      const embed = new DarvoEmbed(this.bot, d);
+      return this.broadcast(embed, platform, 'darvo', null);
+    });
+  }
+
+  sendEvent(newEvents, platform) {
+    return Promise.map(newEvents, (e) => {
+      const embed = new EventEmbed(this.bot, [e]);
+      return this.broadcast(embed, platform, 'events', null);
+    });
+  }
+
+  sendFeaturedDeals(newFeaturedDeals, platform) {
+    return Promise.map(newFeaturedDeals, (d) => {
+      const embed = new SalesEmbed(this.bot, [d]);
+      return this.broadcast(embed, platform, 'deals.featured', null);
     });
   }
 
   sendFissures(newFissures, platform) {
-    Promise.map(newFissures, (a) => {
+    return Promise.map(newFissures, (a) => {
       const embed = new FissureEmbed(this.bot, [a]);
-      this.broadcast(embed, platform, 'fissures', null)
-        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
-        .catch(this.logger.error);
+      return this.broadcast(embed, platform, 'fissures', null);
     });
   }
 
   sendInvasions(newInvasions, platform) {
-    Promise.map(newInvasions, (i) => {
+    return Promise.map(newInvasions, (i) => {
       const embed = new InvasionEmbed(this.bot, [i]);
-      this.broadcast(embed, platform, 'invasions')
-        // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
-        .catch(this.logger.error);
+      return this.broadcast(embed, platform, 'invasions', i.getRewardTypes());
+    });
+  }
+
+  sendNews(newNews, platform) {
+    return Promise.map(newNews, (i) => {
+      const embed = new NewsEmbed(this.bot, [i]);
+      return this.broadcast(embed, platform, 'news');
+    });
+  }
+
+  sendPopularDeals(newPopularDeals, platform) {
+    return Promise.map(newPopularDeals, (d) => {
+      const embed = new SalesEmbed(this.bot, [d]);
+      return this.broadcast(embed, platform, 'deals.popular', null);
+    });
+  }
+
+  sendPrimeAccess(newNews, platform) {
+    return Promise.map(newNews, (i) => {
+      const embed = new NewsEmbed(this.bot, [i]);
+      return this.broadcast(embed, platform, 'primeaccess', null);
+    });
+  }
+
+  sendUpdates(newNews, platform) {
+    return Promise.map(newNews, (i) => {
+      const embed = new NewsEmbed(this.bot, [i]);
+      return this.broadcast(embed, platform, 'updates', null);
     });
   }
 
   sendSortie(newSortie, platform) {
     const embed = new SortieEmbed(this.bot, newSortie);
-    this.broadcast(embed, platform, 'sorties', null)
-      // .then(() => this.logger.debug(`broadcast to ${platform} of ${JSON.stringify(embed)}`))
-      .catch(this.logger.error);
+    return this.broadcast(embed, platform, 'sorties', null);
+  }
+
+  sendSyndicateArbiters(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'Arbiters of Hexis');
+    return this.broadcast(embed, platform, 'syndicate.arbiters', null);
+  }
+
+  sendSyndicateLoka(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'New Loka');
+    return this.broadcast(embed, platform, 'syndicate.loka', null);
+  }
+
+  sendSyndicateMeridian(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'Steel Meridian');
+    return this.broadcast(embed, platform, 'syndicate.meridian', null);
+  }
+
+  sendSyndicatePerrin(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'Perrin Sequence');
+    return this.broadcast(embed, platform, 'syndicate.perin', null);
+  }
+
+  sendSyndicateSuda(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'Cephalon Suda');
+    return this.broadcast(embed, platform, 'syndicate.suda', null);
+  }
+
+  sendSyndicateVeil(newSyndicates, platform) {
+    const embed = new SyndicateEmbed(this.bot, newSyndicates, 'Red Veil');
+    return this.broadcast(embed, platform, 'syndicate.veil', null);
   }
 }
 

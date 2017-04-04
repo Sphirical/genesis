@@ -32,29 +32,32 @@ class Track extends Command {
     const items = unsplitItems.split(' ');
     let itemsToTrack = [];
     let eventsToTrack = [];
+    let saveTrack = true;
     if (items[0] === 'all') {
       eventsToTrack = itemsToTrack.concat(eventTypes);
       itemsToTrack = itemsToTrack.concat(rewardTypes);
     } else {
       items.forEach((item) => {
-        if (rewardTypes.includes(item.trim())) {
+        if (rewardTypes.includes(item.trim()) && saveTrack) {
           itemsToTrack.push(item.trim());
-        } else if (eventTypes.includes(item.trim())) {
+        } else if (eventTypes.includes(item.trim()) && saveTrack) {
           eventsToTrack.push(item.trim());
-        } else {
+        } else if (eventsToTrack.length === 0 || itemsToTrack.length === 0) {
           this.sendInstructionEmbed(message);
+          saveTrack = false;
         }
       });
     }
 
     const promises = [];
-    eventsToTrack.forEach(event => promises.push(this.bot.settings
-      .trackEventType(message.channel, event)));
-    itemsToTrack.forEach(item => promises.push(this.bot.settings
-      .trackItem(message.channel, item)));
-
+    if (saveTrack) {
+      eventsToTrack.forEach(event => promises.push(this.bot.settings
+        .trackEventType(message.channel, event)));
+      itemsToTrack.forEach(item => promises.push(this.bot.settings
+        .trackItem(message.channel, item)));
+      this.messageManager.notifySettingsChange(message, true, true);
+    }
     promises.forEach(promise => promise.catch(this.logger.error));
-    this.messageManager.notifySettingsChange(message, true, true);
   }
 
   sendInstructionEmbed(message) {
@@ -83,7 +86,8 @@ class Track extends Command {
             inline: true,
           },
         ],
-      }, true, false));
+      }, true, false))
+      .catch(this.logger.error);
   }
 }
 

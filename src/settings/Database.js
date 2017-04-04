@@ -387,6 +387,23 @@ class Database {
   }
 
   /**
+   * Get all pings for a guild for the provided event types and items
+   * @param  {Guild} guild                 Guild to get pings for
+   * @param  {Array.<string>} itemsOrTypes array of strings corresponding to event and reward types
+   * @returns {Promise.<string>}            Promise of a string to prepend to a message
+   */
+  getPing(guild, itemsOrTypes) {
+    const query = SQL`SELECT text FROM pings WHERE guild_id=${guild.id} AND item_or_type in (${itemsOrTypes})`;
+    return this.db.query(query)
+    .then((res) => {
+      if (res[0].length === 0) {
+        return '';
+      }
+      return res[0].map(result => result[0].text).join(', ');
+    });
+  }
+
+  /**
    * Removes a ping message
    * @param {Guild} guild The guild where the ping message is currently being sent
    * @param {string} itemOrType The item or event type associated to the ping message
@@ -421,7 +438,7 @@ class Database {
       return this.db.query(query);
     } catch (e) {
       this.logger.error(e);
-      return null;
+      return [];
     }
   }
 

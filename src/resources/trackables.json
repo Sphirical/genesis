@@ -24,6 +24,8 @@
     "fissures",
     "baro",
     "darvo",
+    "deals.featured",
+    "deals.popular",
     "enemies",
     "conclave.weeklies",
     "conclave.dailies",
@@ -32,7 +34,9 @@
     "syndicate.loka",
     "syndicate.perrin",
     "syndicate.veil",
-    "syndicate.meridian"
+    "syndicate.meridian",
+    "updates",
+    "primeaccess"
   ],
   "objs": [
   {
