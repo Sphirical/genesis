@@ -149,8 +149,12 @@ class Notifier {
       channelResults.forEach((result) => {
         const channel = this.client.channels.get(result.channelId);
         if (channel) {
-          return this.settings.getPing(channel.guild, (items || []).concat([type]))
-            .then(prepend => this.bot.messageManager.embedToChannel(channel, embed, prepend));
+          if (channel.type === 'text') {
+            return this.settings.getPing(channel.guild, (items || []).concat([type]))
+              .then(prepend => this.bot.messageManager.embedToChannel(channel, embed, prepend));
+          } else if (channel.type === 'dm') {
+            return this.bot.messageManager.embedToChannel(channel, embed, '');
+          }
         }
         return null;
       })));
