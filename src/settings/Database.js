@@ -399,7 +399,8 @@ class Database {
       if (res[0].length === 0) {
         return '';
       }
-      return res[0].map(result => result[0].text).join(', ');
+      return res[0]
+        .map(result => result.text).join(', ');
     });
   }
 

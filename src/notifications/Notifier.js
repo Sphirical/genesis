@@ -24,6 +24,7 @@ class Notifier {
     this.ids = {};
     this.messageManager = bot.MessageManager;
     this.settings = bot.settings;
+    this.client = bot.client;
   }
 
   /**
@@ -146,9 +147,9 @@ class Notifier {
     return this.bot.settings.getNotifications(type, platform, items)
     .then(channels => Promise.map(channels, channelResults =>
       channelResults.forEach((result) => {
-        const channel = this.bot.client.channels.get(result.channelId);
+        const channel = this.client.channels.get(result.channelId);
         if (channel) {
-          return this.settings.getPing(channel.guild, (items || []).push(type))
+          return this.settings.getPing(channel.guild, (items || []).concat([type]))
             .then(prepend => this.bot.messageManager.embedToChannel(channel, embed, prepend));
         }
         return null;

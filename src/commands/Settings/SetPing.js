@@ -14,7 +14,7 @@ class SetPing extends Command {
   }
 
   run(message) {
-    const regex = new RegExp(`(${eventTypes.join('|')}|${rewardTypes.join('|')}|all)(.+)`, 'i');
+    const regex = new RegExp(`(${eventTypes.join('|')}|${rewardTypes.join('|')})(.+)`, 'i');
     const match = message.content.match(regex);
 
     if (match) {
