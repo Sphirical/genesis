@@ -54,7 +54,7 @@ class Notifier {
       const baroToNotify = newData.voidTrader && !ids.includes(newData.voidTrader.id) ?
         newData.voidTrader : undefined;
       const conclaveToNotify = newData.conclaveChallenges.filter(cc => !ids.includes(cc.id));
-      const dailyDealsToNotify = newData.dailyDeals.filter(d => !ids.incluides(d.id));
+      const dailyDealsToNotify = newData.dailyDeals.filter(d => !ids.includes(d.id));
       const eventsToNotify = newData.events
         .filter(e => !ids.includes(e.id) && !e.getExpired());
       const invasionsToNotify = newData.invasions
