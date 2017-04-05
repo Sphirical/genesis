@@ -42,7 +42,7 @@ class Untrack extends Command {
           itemsToTrack.push(item.trim());
         } else if (eventTypes.includes(item.trim()) && saveTrack) {
           eventsToTrack.push(item.trim());
-        } else if (eventsToTrack.length === 0 || itemsToTrack.length === 0) {
+        } else if ((eventsToTrack.length === 0 || itemsToTrack.length === 0) && saveTrack) {
           this.sendInstructionEmbed(message);
           saveTrack = false;
         }
