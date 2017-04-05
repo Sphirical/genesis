@@ -10,19 +10,23 @@ class SetPing extends Command {
     this.usages = [
       { description: 'Set ping for an event or item', parameters: ['event or language'] },
     ];
-    this.regex = new RegExp(`^${this.call}\\s?((${eventTypes.join('|')}|${rewardTypes.join('|')})(.+))?$`, 'i');
+    this.regex = new RegExp(`^${this.call}\\s?((${eventTypes.join('|')}|${rewardTypes.join('|')})(.+)?)?$`, 'i');
   }
 
   run(message) {
-    const regex = new RegExp(`(${eventTypes.join('|')}|${rewardTypes.join('|')})(.+)`, 'i');
+    const regex = new RegExp(`(${eventTypes.join('|')}|${rewardTypes.join('|')})(.+)?`, 'i');
     const match = message.content.match(regex);
 
     if (match) {
       const eventOrItem = match[1].trim();
-      const pingString = match[2].trim();
+      const pingString = match[2] ? match[2].trim() : undefined;
 
-      if ((!eventOrItem || !pingString) || eventTypes.concat(rewardTypes).includes(eventOrItem)) {
-        this.sendInstructions(message);
+      if (!eventOrItem || !eventTypes.concat(rewardTypes).includes(eventOrItem)) {
+        this.sendInstructions(message).then(() => {
+          this.messageManager.notifySettingsChange(message, true, true);
+        });
+      } else if (!pingString) {
+        this.bot.settings.removePing(message.guild, eventOrItem).catch(this.logger.error);
       } else {
         this.bot.settings.setPing(message.guild, eventOrItem, pingString).then(() => {
           this.messageManager.notifySettingsChange(message, true, true);
