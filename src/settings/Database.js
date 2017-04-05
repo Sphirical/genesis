@@ -404,6 +404,18 @@ class Database {
     });
   }
 
+  getPingsForGuild(guild) {
+    const query = SQL`SELECT item_or_type, text FROM pings WHERE guild_id=${guild.id}`;
+    return this.db.query(query)
+    .then((res) => {
+      if (res[0].length === 0) {
+        return '';
+      }
+      return res[0]
+        .map(result => ({ text: result.text, thing: result.item_or_type }));
+    });
+  }
+
   /**
    * Removes a ping message
    * @param {Guild} guild The guild where the ping message is currently being sent
