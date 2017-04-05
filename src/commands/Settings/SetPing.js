@@ -8,7 +8,7 @@ class SetPing extends Command {
   constructor(bot) {
     super(bot, 'settings.setping', 'set ping');
     this.usages = [
-      { description: 'Set ping for an event or item', parameters: ['event or language'] },
+      { description: 'Set ping for an event or item', parameters: ['event or reward'] },
     ];
     this.regex = new RegExp(`^${this.call}\\s?((${eventTypes.join('|')}|${rewardTypes.join('|')})(.+)?)?$`, 'i');
   }
