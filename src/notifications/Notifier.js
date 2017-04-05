@@ -120,17 +120,17 @@ class Notifier {
           }
           return true;
         })
-        .then(() => {
-          if (syndicateToNotify) {
-            return this.sendSyndicateArbiters(syndicateToNotify, platform)
-              .then(() => this.sendSyndicatePerrin(syndicateToNotify, platform))
-              .then(() => this.sendSyndicateSuda(syndicateToNotify, platform))
-              .then(() => this.sendSyndicateMeridian(syndicateToNotify, platform))
-              .then(() => this.sendSyndicateLoka(syndicateToNotify, platform))
-              .then(() => this.sendSyndicateVeil(syndicateToNotify, platform));
-          }
-          return true;
-        })
+        // .then(() => {
+        //   if (syndicateToNotify) {
+        //     return this.sendSyndicateArbiters(syndicateToNotify, platform)
+        //       .then(() => this.sendSyndicatePerrin(syndicateToNotify, platform))
+        //       .then(() => this.sendSyndicateSuda(syndicateToNotify, platform))
+        //       .then(() => this.sendSyndicateMeridian(syndicateToNotify, platform))
+        //       .then(() => this.sendSyndicateLoka(syndicateToNotify, platform))
+        //       .then(() => this.sendSyndicateVeil(syndicateToNotify, platform));
+        //   }
+        //   return true;
+        // })
         .then(() => this.sendUpdates(updatesToNotify, platform));
     }).catch(this.logger.error);
   }
