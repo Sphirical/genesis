@@ -15,6 +15,7 @@ class SettingsEmbed extends BaseEmbed {
     super();
 
     this.color = 0x00ff00;
+    this.url = 'https://warframe-community-developers.github.io/genesis/index.html';
     if (channel.type === 'text') {
       this.title = `Settings for ${channel.name}`;
     } else {
@@ -23,9 +24,9 @@ class SettingsEmbed extends BaseEmbed {
 
     this.fields = [{ name: '_ _', value: '' }];
     settings.forEach((setting) => {
-      this.fields[0].value += `\n**${setting.name}:** ${setting.value}`;
+      this.fields[0].value += `\n**:** ${setting.value}`;
     });
-    this.footer.text = 'Settings data provided by Cephalon Genesis | Warframe Community Developers';
+    this.footer.text = 'Enjoy!';
   }
 }
 

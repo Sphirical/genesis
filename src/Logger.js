@@ -43,7 +43,9 @@ levels.forEach((level) => {
     if (level.toLowerCase() === 'error') {
       // eslint-disable-next-line no-console
       console.error(`[${level}] ${message}\n${message.fileName || ''}\n${message.stack || ''}`);
-      this.ravenClient.captureException(message);
+      if (this.ravenClient) {
+        this.ravenClient.captureException(message);
+      }
     }
   };
 });
