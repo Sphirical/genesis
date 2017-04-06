@@ -24,7 +24,7 @@ class SettingsEmbed extends BaseEmbed {
 
     this.fields = [{ name: '_ _', value: '' }];
     settings.forEach((setting) => {
-      this.fields[0].value += `\n**:** ${setting.value}`;
+      this.fields[0].value += `\n**${setting.name}:** ${setting.value}`;
     });
     this.footer.text = 'Enjoy!';
   }
