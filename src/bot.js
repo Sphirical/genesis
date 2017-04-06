@@ -261,7 +261,8 @@ class Genesis {
       this.settings.addGuildTextChannel(channel).then(() => {
         this.logger.debug(`Text channel ${channel.name} (${channel.id}) created in guild ` +
           `${channel.guild.name} (${channel.guild.id})`);
-      }).catch(this.logger.error);
+      }).catch(() => this.settings.addGuild(channel.guild)
+        .then(() => this.settings.addGuildTextChannel(channel)));
     } else {
       this.settings.addDMChannel(channel).then(() => {
         this.logger.debug(`DM channel with id ${channel.id} created`);
